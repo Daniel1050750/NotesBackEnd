@@ -1,9 +1,5 @@
 package com.javacodegeeks.enterprise.rest.jersey;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.List;
 
 import javax.ws.rs.Consumes;
@@ -17,53 +13,17 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-
-import com.javacodegeeks.enterprise.rest.database.DataBaseConnection;
-import com.javacodegeeks.enterprise.rest.database.Database;
-import com.javacodegeeks.enterprise.rest.models.Credentials;
 import com.javacodegeeks.enterprise.rest.models.Notes;
-import com.javacodegeeks.enterprise.rest.models.Users;
+import com.javacodegeeks.enterprise.rest.notes.NoteDAO;
+import com.javacodegeeks.enterprise.rest.notes.NotesDAOJDBC;
 
 @Path("/notes")
 public class MainNotes {
 
-	// private NoteDAO noteDAO;
-	// private UserDAO userDAO;
+	private NoteDAO noteDAO;
 
-	/* Create User */
-	@POST
-	@Path("/user")
-	@Consumes({ MediaType.APPLICATION_JSON })
-	@Produces({ MediaType.APPLICATION_JSON })
-	public Response addUser(Users user) {
-		try {
-			// this.userDAO.createUser(user);
-			final String QUERY_INSERT_USER = "INSERT INTO " + Database.USER.getTableName()
-					+ " (fname, lname, username, password, email, img) VALUES (?,?,?,?,?,?);";
-
-			Connection conn = null;
-			PreparedStatement ps = null;
-			try {
-				conn = DataBaseConnection.getConnection();
-				ps = conn.prepareStatement(QUERY_INSERT_USER, Statement.RETURN_GENERATED_KEYS);
-				ps.setString(1, user.getFname());
-				ps.setString(2, user.getLname());
-				ps.setString(3, user.getUsername());
-				ps.setString(4, user.getPassword());
-				ps.setString(5, user.getEmail());
-				ps.setString(6, user.getImg());
-				ps.execute();
-			} catch (SQLException eSQL) {
-				eSQL.printStackTrace();
-			} catch (Exception e) {
-				e.printStackTrace();
-			} finally {
-				DataBaseConnection.close(conn);
-			}
-		} catch (Exception e) {
-			throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
-		}
-		return Response.status(Response.Status.CREATED).entity(user).build();
+	public MainNotes() {
+		noteDAO = new NotesDAOJDBC();
 	}
 
 	/* Create Note */
@@ -73,30 +33,10 @@ public class MainNotes {
 	@Produces({ MediaType.APPLICATION_JSON })
 	public Response addNote(Notes note) {
 		try {
-			// this.noteDAO.createNote(note);
-			final String QUERY_INSERT_NOTE = "INSERT INTO " + Database.NOTE.getTableName()
-					+ " (title, content, level, share) VALUES (?,?,?,?);";
-			Connection conn = null;
-			PreparedStatement ps = null;
-			try {
-				conn = DataBaseConnection.getConnection();
-				ps = conn.prepareStatement(QUERY_INSERT_NOTE, Statement.RETURN_GENERATED_KEYS);
-				ps.setString(1, note.getTitle());
-				ps.setString(2, note.getContent());
-				ps.setInt(3, note.getLevel());
-				ps.setString(4, note.getShare());
-				ps.execute();
-			} catch (SQLException eSQL) {
-				eSQL.printStackTrace();
-			} catch (Exception e) {
-				e.printStackTrace();
-			} finally {
-				DataBaseConnection.close(conn);
-			}
+			return Response.status(Response.Status.CREATED).entity(this.noteDAO.createNote(note)).build();
 		} catch (Exception e) {
 			throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
 		}
-		return Response.status(Response.Status.CREATED).entity(note).build();
 	}
 
 	/* Update Note */
@@ -106,158 +46,33 @@ public class MainNotes {
 	@Produces({ MediaType.APPLICATION_JSON })
 	public Response updateNote(@PathParam("id") int id, Notes note) {
 		try {
-			// this.noteDAO.createNote(note);
-			final String QUERY_UPDATE_NOTE = "UPDATE " + Database.NOTE.getTableName() + " SET title = ? ,"
-					+ " content = ? ," + " level = ? ," + " share = ? " + " WHERE id = " + id;
-			Connection conn = null;
-			PreparedStatement ps = null;
-			try {
-				conn = DataBaseConnection.getConnection();
-				ps = conn.prepareStatement(QUERY_UPDATE_NOTE, Statement.RETURN_GENERATED_KEYS);
-				ps.setString(1, note.getTitle());
-				ps.setString(2, note.getContent());
-				ps.setInt(3, note.getLevel());
-				ps.setString(4, note.getShare());
-				ps.executeUpdate();
-			} catch (SQLException eSQL) {
-				eSQL.printStackTrace();
-			} catch (Exception e) {
-				e.printStackTrace();
-			} finally {
-				DataBaseConnection.close(conn);
-			}
+			return Response.status(Response.Status.OK).entity(this.noteDAO.updateNote(id, note)).build();
 		} catch (Exception e) {
 			throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
 		}
-		return Response.status(Response.Status.OK).entity(note).build();
 	}
 
 	/* Delete Note */
 	@DELETE
 	@Path("/notes/{id}")
-	@Consumes({ MediaType.APPLICATION_JSON })
 	@Produces({ MediaType.APPLICATION_JSON })
 	public Response deleteNote(@PathParam("id") int id) {
 		try {
-			// this.noteDAO.createNote(note);
-			final String QUERY_DELETE_NOTE = "DELETE FROM " + Database.NOTE.getTableName() + " WHERE id = " + id;
-			Connection conn = null;
-			PreparedStatement ps = null;
-			try {
-				conn = DataBaseConnection.getConnection();
-				ps = conn.prepareStatement(QUERY_DELETE_NOTE, Statement.RETURN_GENERATED_KEYS);
-				ps.execute();
-			} catch (SQLException eSQL) {
-				eSQL.printStackTrace();
-			} catch (Exception e) {
-				e.printStackTrace();
-			} finally {
-				DataBaseConnection.close(conn);
-			}
+			return Response.status(Response.Status.OK).entity(this.noteDAO.deleteNote(id)).build();
 		} catch (Exception e) {
 			throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
 		}
-		return Response.status(Response.Status.OK).entity(id).build();
 	}
 
-	@POST
-	@Consumes({ MediaType.APPLICATION_FORM_URLENCODED })
-	@Produces({ MediaType.APPLICATION_JSON })
-	public Response authenticateUser(Credentials credentials) {
-
-		// String username = credentials.getUsername();
-		// String password = credentials.getPassword();
-
-		return Response.status(Response.Status.CREATED).entity(credentials).build();
-	}
-
-	/*@GET
-	@Path("/usernotes/{email}")
+	@GET
+	@Path("/notes/{email}")
 	@Produces({ MediaType.APPLICATION_JSON })
 	public List<Notes> getAllNotes(@PathParam("email") String email, Notes note) {
 		try {
-			// this.noteDAO.createNote(note);
-			final String QUERY_GETALL_NOTE = "SELECT * FROM " + Database.NOTE.getTableName() + " WHERE share like " + email;
-			Connection conn = null;
-			PreparedStatement ps = null;
-			try {
-				conn = DataBaseConnection.getConnection();
-				ps = conn.prepareStatement(QUERY_GETALL_NOTE, Statement.RETURN_GENERATED_KEYS);
-				ps.execute();
-			} catch (SQLException eSQL) {
-				eSQL.printStackTrace();
-			} catch (Exception e) {
-				e.printStackTrace();
-			} finally {
-				DataBaseConnection.close(conn);
-			}
+			this.noteDAO.getNote(email);
 		} catch (Exception e) {
 			throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
 		}
-		return Response.status(Response.Status.OK).entity(note).build();
+		return (List<Notes>) Response.status(Response.Status.OK).entity(note).build();
 	}
-
-	/*
-	 * @GET
-	 * 
-	 * @Path("/{parameter}") public Response responseMsg(@PathParam("parameter")
-	 * String parameter,
-	 * 
-	 * @DefaultValue("Nothing to say") @QueryParam("value") String value) {
-	 * 
-	 * String output = "Hello from: " + parameter + " : " + value;
-	 * 
-	 * return Response.status(200).entity("joaquim").build(); }
-	 * 
-	 * 
-	 * /*
-	 * 
-	 * @POST
-	 * 
-	 * @Path("/users")
-	 * 
-	 * @Consumes("text/plain") public String postClichedMessage(String message) {
-	 * return "Olá Daniel"; }
-	 *
-	 * 
-	 * Delete Note
-	 * 
-	 * @DELETE
-	 * 
-	 * @Path("/user/{id}/notes")
-	 * 
-	 * @Consumes(MediaType.APPLICATION_JSON)
-	 * 
-	 * @Produces(MediaType.APPLICATION_JSON) public Response deleteNote() throws
-	 * Exception { return null; }
-	 * 
-	 * /* Get All Notes
-	 * 
-	 * @GET
-	 * 
-	 * @Path("/notes/")
-	 * 
-	 * @Consumes(MediaType.APPLICATION_JSON)
-	 * 
-	 * @Produces(MediaType.APPLICATION_JSON) public Response
-	 * findUserById(@PathParam("username") String username, @PathParam("password")
-	 * String password) { return Response.status(200).entity("teste").build();
-	 * //return null; }
-	 * 
-	 * @GET
-	 * 
-	 * @Path("/user/{username}/{password}")
-	 * 
-	 * @Consumes(MediaType.APPLICATION_JSON)
-	 * 
-	 * @Produces(MediaType.APPLICATION_JSON) public Response findUserById() { return
-	 * Response.status(200).entity("teste").build(); //return null; }
-	 * 
-	 * @PUT
-	 * 
-	 * @Consumes(MediaType.APPLICATION_JSON)
-	 * 
-	 * @Produces(MediaType.APPLICATION_JSON) public Response editNote() throws
-	 * Exception { return null; }
-	 */
 }
